@@ -10,6 +10,8 @@ public class MongoDataBase
     private MongoServer server;
     private MongoDatabase database;
 
+    private MongoCollection accounts;
+
     public void Initilize()
     {
         client = new MongoClient(MONGO_URI);
@@ -17,6 +19,7 @@ public class MongoDataBase
         database = server.GetDatabase(DATABASE_NAME);
 
         //This is where we would initilize collections
+        accounts = database.GetCollection<AccountModel>("account");
         UnityEngine.Debug.Log("Database has been initilized");
     }
 
@@ -26,4 +29,31 @@ public class MongoDataBase
         server.Shutdown();
         database = null;
     }
+
+    #region Insert
+    public bool InsertAccount(string username, string password, string email)
+    {
+        AccountModel newAccount = new AccountModel();
+        newAccount.Username = username;
+        newAccount.ShaPassword = password;
+        newAccount.Email = email;
+        newAccount.Discriminator = "0000";
+
+        accounts.Insert(newAccount);
+
+        return true;
+    }
+    #endregion
+
+    #region Fetch
+
+    #endregion
+
+    #region Update
+
+    #endregion
+
+    #region Delete
+
+    #endregion
 }

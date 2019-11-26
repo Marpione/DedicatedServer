@@ -50,6 +50,9 @@ public class Server : MonoBehaviour
 
         isStarted = true;
         Debug.Log(string.Format("Opening Connection on port {0} and port {1}", port, web_Port));
+
+        //Test
+        mongoDataBase.InsertAccount("Marpione", "1234dsfsd", "ugurtanerkazan@gmail.com");
     }
 
     public void ShutDown()
