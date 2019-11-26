@@ -2,7 +2,7 @@
 
 public class MongoDataBase
 {
-    private const string MONGO_URI = "mongodb://Marpione843749Kom@lobbydb-shard-00-00-4obkx.mongodb.net:27017,lobbydb-shard-00-01-4obkx.mongodb.net:27017,lobbydb-shard-00-02-4obkx.mongodb.net:27017/test?ssl=true&replicaSet=LobbyDB-shard-0&authSource=admin&retryWrites=true&w=majority";
+    private const string MONGO_URI = "mongodb://Marpione:843749Kom@lobbydb-4obkx.mongodb.net/lobbydb";
     private const string DATABASE_NAME = "lobbydb";
 
 
