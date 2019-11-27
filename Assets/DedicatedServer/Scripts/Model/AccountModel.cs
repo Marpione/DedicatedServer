@@ -1,12 +1,12 @@
-﻿using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
+﻿//using MongoDB.Bson;
+//using MongoDB.Bson.Serialization.Attributes;
 using System;
 
 [System.Serializable]
 public class AccountModel
 {
     //[BsonId]
-    public ObjectId _id;
+    //public ObjectId _id;
 
     public int ActiveConnection { set; get; }
     public string Username { get; set; }
