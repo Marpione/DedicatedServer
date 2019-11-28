@@ -50,9 +50,6 @@ public class Server : MonoBehaviour
 
         isStarted = true;
         Debug.Log(string.Format("Opening Connection on port {0} and port {1}", port, web_Port));
-
-        //Test
-        mongoDataBase.InsertAccount("Marpione", "1234dsfsd", "ugurtanerkazan@gmail.com");
     }
 
     public void ShutDown()
@@ -111,6 +108,9 @@ public class Server : MonoBehaviour
             case NetOP.CreateAccount:
                 Net_CreateAccount(connectionId, channelId, recHostId, (Net_CreateAccount)netMessage);
                 break;
+            case NetOP.LoginRequest:
+                //Net_LoginRequest(connectionId, channelId, recHostId, (Net_CreateAccount)netMessage);
+                break;
         }
     }
 
@@ -118,6 +118,11 @@ public class Server : MonoBehaviour
     {
         Debug.Log(string.Format("Create Account Message {0}, {1}, {2}", ca.Username, ca.Password, ca.Email));
     }
+
+    //private void Net_LoginRequest(int connectionId, int channelId, int recHostId, Net_LoginRequest lr)
+    //{
+    //    Debug.Log(string.Format("Create Account Message {0}, {1}, {2}", ca.Username, ca.Password, ca.Email));
+    //}
     #endregion
 
     #region Send
