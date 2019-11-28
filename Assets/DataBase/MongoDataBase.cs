@@ -64,6 +64,7 @@ public class MongoDataBase
         newAccount.ShaPassword = password;
         newAccount.Email = email;
         newAccount.Discriminator = "0000";
+        newAccount.CreateOn = System.DateTime.Now;
 
         //Roll for unique Discriminator
         int rollCount = 0;

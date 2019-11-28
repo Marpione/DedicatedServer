@@ -96,6 +96,50 @@ public class Server : MonoBehaviour
                 break;
         }
     }
+
+    private void CreateAccount(int connectionId, int channelId, int recHostId, Net_CreateAccount ca)
+    {
+        Net_OnCreateAccount oca = new Net_OnCreateAccount();
+
+        if(mongoDataBase.InsertAccount(ca.Username, ca.Password, ca.Email))
+        {
+            oca.Success = 1;
+            oca.Information = "Account was created";
+        }
+        else
+        {
+            oca.Success = 0;
+            oca.Information = "There was an error on create account!";
+        }
+
+        SendClient(recHostId, connectionId, oca);
+    }
+
+    private void LoginRequest(int connectionId, int channelId, int recHostId, Net_LoginRequest lr)
+    {
+        string randomToken = Utility.GenerateRandom(4);
+
+        AccountModel account = mongoDataBase.LoginAccount(lr.UsernameOrEmail, lr.Password, connectionId, randomToken);
+        Net_OnLoginRequest olr = new Net_OnLoginRequest();
+        
+        if(account != null)
+        {
+            olr.Success = 1;
+            olr.Information = "Login success " + account.Username;
+            olr.Discriminator = account.Discriminator;
+            olr.Token = randomToken;
+            olr.ConnectionId = connectionId;
+        }
+        else
+        {
+            olr.Success = 0;
+        }
+        
+
+        SendClient(recHostId, connectionId, olr);
+
+    }
+
     #region OnData
     private void OnData(int connectionId, int channelId, int recHostId, NetMessage netMessage)
     {
@@ -106,23 +150,15 @@ public class Server : MonoBehaviour
                 Debug.LogError("Unexpected Message from client");
                 break;
             case NetOP.CreateAccount:
-                Net_CreateAccount(connectionId, channelId, recHostId, (Net_CreateAccount)netMessage);
+                CreateAccount(connectionId, channelId, recHostId, (Net_CreateAccount)netMessage);
                 break;
             case NetOP.LoginRequest:
-                //Net_LoginRequest(connectionId, channelId, recHostId, (Net_CreateAccount)netMessage);
+                LoginRequest(connectionId, channelId, recHostId, (Net_LoginRequest)netMessage);
                 break;
         }
     }
 
-    private void Net_CreateAccount(int connectionId, int channelId, int recHostId, Net_CreateAccount ca)
-    {
-        Debug.Log(string.Format("Create Account Message {0}, {1}, {2}", ca.Username, ca.Password, ca.Email));
-    }
 
-    //private void Net_LoginRequest(int connectionId, int channelId, int recHostId, Net_LoginRequest lr)
-    //{
-    //    Debug.Log(string.Format("Create Account Message {0}, {1}, {2}", ca.Username, ca.Password, ca.Email));
-    //}
     #endregion
 
     #region Send
