@@ -26,7 +26,7 @@ public class MongoDataBase
 
         //This is where we would initilize collections
         accounts = database.GetCollection<AccountModel>("account");
-        friends = database.GetCollection<FriendModel>("friends");
+        friends = database.GetCollection<FriendModel>("friend");
         UnityEngine.Debug.Log(accounts);
         UnityEngine.Debug.Log(accounts.Database);
         UnityEngine.Debug.Log("Database has been initilized");
@@ -40,6 +40,59 @@ public class MongoDataBase
     }
 
     #region Insert
+
+    public bool InsertFriend(string token, string usernameOrEmail)
+    {
+        FriendModel newFriend = new FriendModel();
+        Debug.Log(newFriend);
+        newFriend.Sender = new MongoDBRef("account", FindAccountByToken(token)._id);
+
+        //Getting Reference to friend
+        if(!Utility.IsEmail(usernameOrEmail))
+        {
+            //If Username
+            string[] data = usernameOrEmail.Split('#');
+            if(data[1] != null)
+            {
+                AccountModel friend = FindAccountByUsernameAndDiscriminator(data[0], data[1]);
+                if(friend != null)
+                {
+                    newFriend.Reciver = new MongoDBRef("account", friend._id);
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+        else
+        {
+            //If Email
+            AccountModel friend = FindAccountByEmail(usernameOrEmail);
+            if (friend != null)
+            {
+                newFriend.Reciver = new MongoDBRef("account", friend._id);
+            }
+            else return false;
+        }
+
+        if(newFriend.Reciver != newFriend.Sender)
+        {
+            //Check if the friend exist?
+            var query = Query.And(
+                Query<FriendModel>.EQ(u => u.Sender, newFriend.Sender),
+                Query<FriendModel>.EQ(u => u.Reciver, newFriend.Reciver));
+
+            //If friend not added, create one
+            if(friends.FindOne(query) == null)
+            {
+                friends.Insert(newFriend);
+            }
+            return true;
+        }
+        return false;
+    }
+
     public bool InsertAccount(string username, string password, string email)
     {
         if(!Utility.IsEmail(email))
@@ -143,6 +196,11 @@ public class MongoDataBase
             Query<AccountModel>.EQ(u => u.Username, username),
             Query<AccountModel>.EQ(u => u.Discriminator, discriminator));
         return accounts.FindOne(query);
+    }
+
+    public AccountModel FindAccountByToken(string token)
+    {
+        return accounts.FindOne(Query<AccountModel>.EQ(u => u.Token, token));
     }
     #endregion
 

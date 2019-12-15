@@ -1,5 +1,5 @@
 ﻿
-
+[System.Serializable]
 public class Net_RequestFriend : NetMessage
 {
     public Net_RequestFriend()

@@ -1,5 +1,5 @@
 ﻿
-
+[System.Serializable]
 public class Net_RemoveFriend : NetMessage
 {
     public Net_RemoveFriend()

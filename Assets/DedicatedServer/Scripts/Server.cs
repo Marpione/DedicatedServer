@@ -157,10 +157,17 @@ public class Server : MonoBehaviour
             case NetOP.LoginRequest:
                 LoginRequest(connectionId, channelId, recHostId, (Net_LoginRequest)netMessage);
                 break;
+            case NetOP.AddFriend:
+                AddFriend(connectionId, channelId, recHostId, (Net_AddFriend)netMessage);
+                break;
+            case NetOP.RemoveFriend:
+                RemoveFriend(connectionId, channelId, recHostId, (Net_RemoveFriend)netMessage);
+                break;
+            case NetOP.RequestFriend:
+                RequestFriend(connectionId, channelId, recHostId, (Net_RequestFriend)netMessage);
+                break;
         }
     }
-
-
     #endregion
 
     #region Send
@@ -179,6 +186,41 @@ public class Server : MonoBehaviour
             NetworkTransport.Send(hostId, connectionID, relibleChannel, buffer, BYTE_SIZE, out error);
         //else
         //    NetworkTransport.Send(webHostId, connectionID, relibleChannel, buffer, BYTE_SIZE, out error);
+    }
+
+    private void AddFriend(int connectionId, int channelId, int recHostId, Net_AddFriend netMessage)
+    {
+        Net_OnAddFriend oaf = new Net_OnAddFriend();
+
+        if(mongoDataBase.InsertFriend(netMessage.Token, netMessage.UsernameOrEmail))
+        {
+            if(Utility.IsEmail(netMessage.UsernameOrEmail))
+            {
+                //This is email
+                oaf.FriendAccount = mongoDataBase.FindAccountByEmail(netMessage.UsernameOrEmail).GetAccount();
+            }
+            else
+            {
+                string[] data = netMessage.UsernameOrEmail.Split('#');
+                if (data[1] == null)
+                    return;
+
+                //This is username
+                oaf.FriendAccount = mongoDataBase.FindAccountByUsernameAndDiscriminator(data[0], data[1]).GetAccount();
+            }
+        }
+
+        SendClient(recHostId, connectionId, oaf);
+    }
+
+    private void RequestFriend(int connectionId, int channelId, int recHostId, Net_RequestFriend netMessage)
+    {
+
+    }
+
+    private void RemoveFriend(int connectionId, int channelId, int recHostId, Net_RemoveFriend netMessage)
+    {
+
     }
 
     #endregion

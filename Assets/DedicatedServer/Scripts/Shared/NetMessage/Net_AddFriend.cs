@@ -1,4 +1,5 @@
 ﻿
+[System.Serializable]
 public class Net_AddFriend : NetMessage
 {
     public Net_AddFriend()

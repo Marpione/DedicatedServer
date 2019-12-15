@@ -20,4 +20,12 @@ public class AccountModel
     public DateTime CreateOn { get; set; }
     public DateTime LastLogin { get; set; }
 
+
+    public Account GetAccount()
+    {
+        return new Account() { Username = this.Username,
+            ActiveconnectionStatus = this.ActiveConnection,
+            Discriminator = this.Discriminator,
+            Status = this.Status };
+    }
 }
