@@ -117,7 +117,7 @@ public class Server : MonoBehaviour
 
     private void LoginRequest(int connectionId, int channelId, int recHostId, Net_LoginRequest lr)
     {
-        string randomToken = Utility.GenerateRandom(4);
+        string randomToken = Utility.GenerateRandom(256);
 
         AccountModel account = mongoDataBase.LoginAccount(lr.UsernameOrEmail, lr.Password, connectionId, randomToken);
         Net_OnLoginRequest olr = new Net_OnLoginRequest();
@@ -137,6 +137,8 @@ public class Server : MonoBehaviour
         
 
         SendClient(recHostId, connectionId, olr);
+
+        Debug.Log(olr.Information);
 
     }
 

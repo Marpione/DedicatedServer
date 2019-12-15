@@ -14,6 +14,7 @@ public class MongoDataBase
     private MongoDB.Driver.MongoDatabase database;
 
     private MongoCollection<AccountModel> accounts;
+    private MongoCollection<FriendModel> friends;
 
     public void Initilize()
     {
@@ -25,6 +26,7 @@ public class MongoDataBase
 
         //This is where we would initilize collections
         accounts = database.GetCollection<AccountModel>("account");
+        friends = database.GetCollection<FriendModel>("friends");
         UnityEngine.Debug.Log(accounts);
         UnityEngine.Debug.Log(accounts.Database);
         UnityEngine.Debug.Log("Database has been initilized");
