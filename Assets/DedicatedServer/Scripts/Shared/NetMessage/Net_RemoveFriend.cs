@@ -8,6 +8,6 @@ public class Net_RemoveFriend : NetMessage
     }
 
     public string Token;
-    public string UsernameOrEmail { set; get; }
+    public string Username { set; get; }
 
 }

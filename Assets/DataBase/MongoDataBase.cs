@@ -1,6 +1,8 @@
 ﻿using MongoDB.Driver;
+using MongoDB.Bson;
 using MongoDB.Driver.Builders;
 using UnityEngine;
+using System.Collections.Generic;
 
 public class MongoDataBase
 {
@@ -44,8 +46,6 @@ public class MongoDataBase
     public bool InsertFriend(string token, string usernameOrEmail)
     {
         FriendModel newFriend = new FriendModel();
-        Debug.Log(newFriend);
-        Debug.Log(token);
         newFriend.Sender = new MongoDBRef("account", FindAccountByToken(token)._id);
 
         //Getting Reference to friend
@@ -84,12 +84,15 @@ public class MongoDataBase
                 Query<FriendModel>.EQ(u => u.Sender, newFriend.Sender),
                 Query<FriendModel>.EQ(u => u.Reciver, newFriend.Reciver));
 
+
+
             //If friend not added, create one
             if(friends.FindOne(query) == null)
             {
                 friends.Insert(newFriend);
+                return true;
             }
-            return true;
+            
         }
         return false;
     }
@@ -186,6 +189,12 @@ public class MongoDataBase
     #endregion
 
     #region Fetch
+
+    public AccountModel FindAccounById(ObjectId id)
+    {
+        return accounts.FindOne(Query<AccountModel>.EQ(u => u._id, id));
+    }
+
     public AccountModel FindAccountByEmail(string email)
     {
         return accounts.FindOne(Query<AccountModel>.EQ(u => u.Email, email));
@@ -203,6 +212,48 @@ public class MongoDataBase
     {
         return accounts.FindOne(Query<AccountModel>.EQ(u => u.Token, token));
     }
+
+    public FriendModel FindFriendByUsername(string token, string username)
+    {
+        try
+        {
+            string[] data = username.Split('#');
+            if (data[1] != null)
+            {
+                var sender = new MongoDBRef("account", FindAccountByToken(token)._id);
+                var reciver = new MongoDBRef("account", FindAccountByUsernameAndDiscriminator(data[0], data[1])._id);
+
+                var query = Query.And(
+                    Query<FriendModel>.EQ(f => f.Sender, sender),
+                    Query<FriendModel>.EQ(f => f.Reciver, reciver));
+
+                return friends.FindOne(query);
+            }
+
+            return null;
+        }
+        catch (System.Exception)
+        {
+
+            throw;
+        }
+    }
+    
+    public List<Account> FindAllFriends(string token)
+    {
+        var self = new MongoDBRef("account", FindAccountByToken(token)._id);
+
+        var query = Query<FriendModel>.EQ(f => f.Sender, self);
+
+        List<Account> friendResponse = new List<Account>();
+        foreach (var friend in friends.Find(query))
+        {
+            friendResponse.Add(FindAccounById(friend.Reciver.Id.AsObjectId).GetAccount());
+        }
+
+        return friendResponse;
+    }
+
     #endregion
 
     #region Update
@@ -210,6 +261,10 @@ public class MongoDataBase
     #endregion
 
     #region Delete
-
+    public void RemoveFriend(string token, string username)
+    {
+        ObjectId id = FindFriendByUsername(token, username)._id;
+        friends.Remove(Query<FriendModel>.EQ(f => f._id, id));
+    }
     #endregion
 }

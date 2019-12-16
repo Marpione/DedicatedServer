@@ -192,9 +192,10 @@ public class Server : MonoBehaviour
     {
         Net_OnAddFriend oaf = new Net_OnAddFriend();
 
-        if(mongoDataBase.InsertFriend(netMessage.Token, netMessage.UsernameOrEmail))
+        if (mongoDataBase.InsertFriend(netMessage.Token, netMessage.UsernameOrEmail))
         {
-            if(Utility.IsEmail(netMessage.UsernameOrEmail))
+            oaf.Success = 1;
+            if (Utility.IsEmail(netMessage.UsernameOrEmail))
             {
                 //This is email
                 oaf.FriendAccount = mongoDataBase.FindAccountByEmail(netMessage.UsernameOrEmail).GetAccount();
@@ -209,18 +210,22 @@ public class Server : MonoBehaviour
                 oaf.FriendAccount = mongoDataBase.FindAccountByUsernameAndDiscriminator(data[0], data[1]).GetAccount();
             }
         }
+        else oaf.Success = 0;
         Debug.Log(oaf.GetType());
         SendClient(recHostId, connectionId, oaf);
     }
 
     private void RequestFriend(int connectionId, int channelId, int recHostId, Net_RequestFriend netMessage)
     {
-
+        Net_OnRequestFriend orf = new Net_OnRequestFriend();
+        orf.FriendRequests = mongoDataBase.FindAllFriends(netMessage.Token);
+        Debug.Log("Sending a list of frineds to client ");
+        SendClient(recHostId, connectionId, orf);
     }
 
     private void RemoveFriend(int connectionId, int channelId, int recHostId, Net_RemoveFriend netMessage)
     {
-
+        mongoDataBase.RemoveFriend(netMessage.Token, netMessage.Username);
     }
 
     #endregion
