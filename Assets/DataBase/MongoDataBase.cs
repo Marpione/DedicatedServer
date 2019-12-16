@@ -45,6 +45,7 @@ public class MongoDataBase
     {
         FriendModel newFriend = new FriendModel();
         Debug.Log(newFriend);
+        Debug.Log(token);
         newFriend.Sender = new MongoDBRef("account", FindAccountByToken(token)._id);
 
         //Getting Reference to friend

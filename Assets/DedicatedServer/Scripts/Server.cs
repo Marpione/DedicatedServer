@@ -209,7 +209,7 @@ public class Server : MonoBehaviour
                 oaf.FriendAccount = mongoDataBase.FindAccountByUsernameAndDiscriminator(data[0], data[1]).GetAccount();
             }
         }
-
+        Debug.Log(oaf.GetType());
         SendClient(recHostId, connectionId, oaf);
     }
 
