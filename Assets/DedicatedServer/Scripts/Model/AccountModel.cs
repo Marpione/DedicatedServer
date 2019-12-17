@@ -24,7 +24,7 @@ public class AccountModel
     public Account GetAccount()
     {
         return new Account() { Username = this.Username,
-            ActiveconnectionStatus = this.ActiveConnection,
+            Activeconnection = this.ActiveConnection,
             Discriminator = this.Discriminator,
             Status = this.Status };
     }

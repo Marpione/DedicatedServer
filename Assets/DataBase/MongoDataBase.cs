@@ -3,6 +3,7 @@ using MongoDB.Bson;
 using MongoDB.Driver.Builders;
 using UnityEngine;
 using System.Collections.Generic;
+using System;
 
 public class MongoDataBase
 {
@@ -129,7 +130,7 @@ public class MongoDataBase
         int rollCount = 0;
         while(FindAccountByUsernameAndDiscriminator(newAccount.Username, newAccount.Discriminator) != null)
         {
-            newAccount.Discriminator = Random.Range(0, 999).ToString("0000");
+            newAccount.Discriminator = UnityEngine.Random.Range(0, 999).ToString("0000");
             rollCount++;
             if (rollCount > 1000)
             {
@@ -239,7 +240,7 @@ public class MongoDataBase
         }
     }
     
-    public List<Account> FindAllFriends(string token)
+    public List<Account> FindAllFriendsFrom(string token)
     {
         var self = new MongoDBRef("account", FindAccountByToken(token)._id);
 
@@ -254,10 +255,40 @@ public class MongoDataBase
         return friendResponse;
     }
 
+    public List<Account> FindAllFriendsBy(string email)
+    {
+        var self = new MongoDBRef("account", FindAccountByEmail(email)._id);
+
+        var query = Query<FriendModel>.EQ(f => f.Reciver, self);
+
+        List<Account> friendResponse = new List<Account>();
+        foreach (var friend in friends.Find(query))
+        {
+            friendResponse.Add(FindAccounById(friend.Sender.Id.AsObjectId).GetAccount());
+        }
+
+        return friendResponse;
+    }
+
+    public AccountModel FindAccountByConnectionID(int connectionId)
+    {
+        return accounts.FindOne(Query<AccountModel>.EQ(u => u.ActiveConnection, connectionId));
+    }
+
     #endregion
 
     #region Update
+    internal void UpdateAccountOnDisconnect(string email)
+    {
+        var query = Query<AccountModel>.EQ(a => a.Email, email);
+        var account = accounts.FindOne(query);
 
+        account.Token = null;
+        account.ActiveConnection = 0;
+        account.Status = 0;
+
+        accounts.Update(query, Update<AccountModel>.Replace(account));
+    }
     #endregion
 
     #region Delete

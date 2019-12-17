@@ -82,10 +82,12 @@ public class Server : MonoBehaviour
                 OnData(connectionId, channelId, recHostId, netMessage);
                 break;
             case NetworkEventType.ConnectEvent:
+                //Update friend Here
                 Debug.Log(string.Format("User {0} has connected trough {1} ", connectionId, recHostId));
                 break;
             case NetworkEventType.DisconnectEvent:
-                Debug.Log(string.Format("User {0} has disconnected ", connectionId));
+                //Update friend here
+                DisconnectEvent(recHostId, connectionId);
                 break;
             case NetworkEventType.Nothing:
                 break;
@@ -96,6 +98,8 @@ public class Server : MonoBehaviour
                 break;
         }
     }
+
+  
 
     private void CreateAccount(int connectionId, int channelId, int recHostId, Net_CreateAccount ca)
     {
@@ -129,6 +133,19 @@ public class Server : MonoBehaviour
             olr.Discriminator = account.Discriminator;
             olr.Token = randomToken;
             olr.ConnectionId = connectionId;
+
+            //Update friend here
+            // Prepare and send update message
+            Net_FriendUpdate fu = new Net_FriendUpdate();
+            fu.Friend = account.GetAccount();
+
+            foreach (var f in mongoDataBase.FindAllFriendsBy(account.Email))
+            {
+                if (f.Activeconnection == 0)
+                    continue;
+
+                SendClient(recHostId, f.Activeconnection, fu);
+            }
         }
         else
         {
@@ -168,6 +185,32 @@ public class Server : MonoBehaviour
                 break;
         }
     }
+
+    private void DisconnectEvent(int recHostId, int connectionId)
+    {
+        Debug.Log(string.Format("User {0} has disconnected ", connectionId));
+
+        //Get a referans to the connected acount
+        AccountModel account = mongoDataBase.FindAccountByConnectionID(connectionId);
+        if (account == null)
+            return;
+
+        mongoDataBase.UpdateAccountOnDisconnect(account.Email);
+
+        // Prepare and send update message
+        Net_FriendUpdate fu = new Net_FriendUpdate();
+        AccountModel updatedAccount = mongoDataBase.FindAccountByEmail(account.Email);
+        fu.Friend = updatedAccount.GetAccount();
+
+        foreach (var f in mongoDataBase.FindAllFriendsBy(account.Email))
+        {
+            if (f.Activeconnection == 0)
+                continue;
+
+            SendClient(recHostId, f.Activeconnection, fu);
+        }
+    }
+
     #endregion
 
     #region Send
@@ -218,7 +261,7 @@ public class Server : MonoBehaviour
     private void RequestFriend(int connectionId, int channelId, int recHostId, Net_RequestFriend netMessage)
     {
         Net_OnRequestFriend orf = new Net_OnRequestFriend();
-        orf.FriendRequests = mongoDataBase.FindAllFriends(netMessage.Token);
+        orf.FriendRequests = mongoDataBase.FindAllFriendsFrom(netMessage.Token);
         Debug.Log("Sending a list of frineds to client ");
         SendClient(recHostId, connectionId, orf);
     }

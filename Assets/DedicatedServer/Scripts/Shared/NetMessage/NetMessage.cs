@@ -14,6 +14,8 @@ public static class NetOP
 
     public const int OnAddFriend = 8;
     public const int OnRequestFriend = 9;
+
+    public const int FriendUpdate = 10;
 }
 
 [System.Serializable]
