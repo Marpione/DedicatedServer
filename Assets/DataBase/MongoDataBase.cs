@@ -98,31 +98,37 @@ public class MongoDataBase
         return false;
     }
 
-    public bool InsertAccount(string username, string password, string email)
+    public bool InsertAccount(string username, string password, string email, string facebookId)
     {
-        if(!Utility.IsEmail(email))
+        if(string.IsNullOrEmpty(facebookId))
         {
-            UnityEngine.Debug.Log(email + " Not an E-mail");
-            return false;
+            if (!Utility.IsEmail(email))
+            {
+                UnityEngine.Debug.Log(email + " Not an E-mail");
+                return false;
+            }
+
+            if (!Utility.IsUsername(username))
+            {
+                UnityEngine.Debug.Log(username + " Not an E-mail");
+                return false;
+            }
+
+            //Check if the account is already exist
+            if (FindAccountByEmail(email) != null)
+            {
+                UnityEngine.Debug.Log(email + " Account is already in use");
+                return false;
+            }
         }
 
-        if (!Utility.IsUsername(username))
-        {
-            UnityEngine.Debug.Log(username + " Not an E-mail");
-            return false;
-        }
-
-        //Check if the account is already exist
-        if (FindAccountByEmail(email) != null)
-        {
-            UnityEngine.Debug.Log(email + " Account is already in use");
-            return false;
-        }
+       
 
         AccountModel newAccount = new AccountModel();
         newAccount.Username = username;
         newAccount.ShaPassword = password;
         newAccount.Email = email;
+        newAccount.FacebookUserID = facebookId;
         newAccount.Discriminator = "0000";
         newAccount.CreateOn = System.DateTime.Now;
 
@@ -187,10 +193,44 @@ public class MongoDataBase
 
         return myAccount;
     }
+
+    public AccountModel LoginWithFacebook(string userID, int connectionID, string token)
+    {
+        AccountModel myAccount = null;
+        IMongoQuery query = null;
+
+        //Find my acount
+        myAccount = FindAccountByFacebookId(userID);
+
+        query = Query.And(
+                    Query<AccountModel>.EQ(u => u.FacebookUserID, userID));
+
+        myAccount = accounts.FindOne(query);
+
+        if (myAccount != null)
+        {
+            //Login
+            myAccount.ActiveConnection = connectionID;
+            myAccount.Token = token;
+            myAccount.Status = 1;
+            myAccount.LastLogin = System.DateTime.Now;
+
+            accounts.Update(query, Update<AccountModel>.Replace(myAccount));
+        }
+        else
+        {
+            Debug.Log("No account Found");
+        }
+
+        return myAccount;
+    }
     #endregion
 
     #region Fetch
-
+    public AccountModel FindAccountByFacebookId(string userId)
+    {
+        return accounts.FindOne(Query<AccountModel>.EQ(u => u.FacebookUserID, userId));
+    }
     public AccountModel FindAccounById(ObjectId id)
     {
         return accounts.FindOne(Query<AccountModel>.EQ(u => u._id, id));

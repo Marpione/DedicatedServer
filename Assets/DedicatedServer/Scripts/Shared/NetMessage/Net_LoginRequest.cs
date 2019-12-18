@@ -9,7 +9,7 @@ public class Net_LoginRequest : NetMessage
     {
         OP = NetOP.LoginRequest;
     }
-
+    public string FacebookUserId { set; get; }
     public string UsernameOrEmail { get; set; }
     public string Password { get; set; }
 }

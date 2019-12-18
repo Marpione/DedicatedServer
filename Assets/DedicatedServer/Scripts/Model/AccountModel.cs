@@ -2,6 +2,8 @@
 using MongoDB.Bson.Serialization.Attributes;
 using System;
 
+public enum AccountType { guest, facebook }
+
 [System.Serializable]
 public class AccountModel
 {
@@ -17,6 +19,10 @@ public class AccountModel
     //If bigger than 0 person is online, byte count means how many games he is playing from our server
     public byte Status { get; set; }
     public string Token { get; set; }
+
+    public AccountType AccountType { set; get; }
+
+    public string FacebookUserID { get; set; }
     public DateTime CreateOn { get; set; }
     public DateTime LastLogin { get; set; }
 
@@ -26,6 +32,7 @@ public class AccountModel
         return new Account() { Username = this.Username,
             Activeconnection = this.ActiveConnection,
             Discriminator = this.Discriminator,
-            Status = this.Status };
+            Status = this.Status,
+            AccountType = this.AccountType};
     }
 }

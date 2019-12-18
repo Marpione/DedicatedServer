@@ -105,7 +105,7 @@ public class Server : MonoBehaviour
     {
         Net_OnCreateAccount oca = new Net_OnCreateAccount();
 
-        if(mongoDataBase.InsertAccount(ca.Username, ca.Password, ca.Email))
+        if(mongoDataBase.InsertAccount(ca.Username, ca.Password, ca.Email, ca.FacebookUserId))
         {
             oca.Success = 1;
             oca.Information = "Account was created";
@@ -122,8 +122,17 @@ public class Server : MonoBehaviour
     private void LoginRequest(int connectionId, int channelId, int recHostId, Net_LoginRequest lr)
     {
         string randomToken = Utility.GenerateRandom(256);
-
-        AccountModel account = mongoDataBase.LoginAccount(lr.UsernameOrEmail, lr.Password, connectionId, randomToken);
+        AccountModel account;
+        if (string.IsNullOrEmpty(lr.FacebookUserId))
+        {
+            Debug.Log("Logging in normally");
+            account = mongoDataBase.LoginAccount(lr.UsernameOrEmail, lr.Password, connectionId, randomToken);
+        }
+        else
+        {
+            Debug.Log("Logging with facebook");
+            account = mongoDataBase.LoginWithFacebook(lr.FacebookUserId, connectionId, randomToken);
+        }
         Net_OnLoginRequest olr = new Net_OnLoginRequest();
         
         if(account != null)
