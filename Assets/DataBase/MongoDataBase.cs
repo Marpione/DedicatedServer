@@ -44,38 +44,19 @@ public class MongoDataBase
 
     #region Insert
 
-    public bool InsertFriend(string token, string usernameOrEmail)
+    public bool InsertFriend(string token, string firendUserId)
     {
         FriendModel newFriend = new FriendModel();
         newFriend.Sender = new MongoDBRef("account", FindAccountByToken(token)._id);
 
-        //Getting Reference to friend
-        if(!Utility.IsEmail(usernameOrEmail))
+        AccountModel friend = FindAccountByUserId(firendUserId);
+        if (friend != null)
         {
-            //If Username
-            string[] data = usernameOrEmail.Split('#');
-            if(data[1] != null)
-            {
-                AccountModel friend = FindAccountByUsernameAndDiscriminator(data[0], data[1]);
-                if(friend != null)
-                {
-                    newFriend.Reciver = new MongoDBRef("account", friend._id);
-                }
-                else
-                {
-                    return false;
-                }
-            }
+            newFriend.Reciver = new MongoDBRef("account", friend._id);
         }
         else
         {
-            //If Email
-            AccountModel friend = FindAccountByEmail(usernameOrEmail);
-            if (friend != null)
-            {
-                newFriend.Reciver = new MongoDBRef("account", friend._id);
-            }
-            else return false;
+            return false;
         }
 
         if(newFriend.Reciver != newFriend.Sender)
@@ -98,24 +79,12 @@ public class MongoDataBase
         return false;
     }
 
-    public bool InsertAccount(string username, string password, string email, string facebookId)
+    public bool InsertAccount(string userId, string password, string email, string facebookId)
     {
         if(string.IsNullOrEmpty(facebookId))
         {
-            if (!Utility.IsEmail(email))
-            {
-                UnityEngine.Debug.Log(email + " Not an E-mail");
-                return false;
-            }
-
-            if (!Utility.IsUsername(username))
-            {
-                UnityEngine.Debug.Log(username + " Not an E-mail");
-                return false;
-            }
-
             //Check if the account is already exist
-            if (FindAccountByEmail(email) != null)
+            if (FindAccountByUserId(email) != null)
             {
                 UnityEngine.Debug.Log(email + " Account is already in use");
                 return false;
@@ -125,85 +94,67 @@ public class MongoDataBase
        
 
         AccountModel newAccount = new AccountModel();
-        newAccount.Username = username;
-        newAccount.ShaPassword = password;
-        newAccount.Email = email;
-        newAccount.FacebookUserID = facebookId;
-        newAccount.Discriminator = "0000";
+        newAccount.userId = userId;
         newAccount.CreateOn = System.DateTime.Now;
-
-        //Roll for unique Discriminator
-        int rollCount = 0;
-        while(FindAccountByUsernameAndDiscriminator(newAccount.Username, newAccount.Discriminator) != null)
-        {
-            newAccount.Discriminator = UnityEngine.Random.Range(0, 999).ToString("0000");
-            rollCount++;
-            if (rollCount > 1000)
-            {
-                Debug.Log("We rolled too many times suggest a user name to change!");
-                return false;
-            }
-                
-        }
 
         accounts.Insert(newAccount);
         return true;
     }
 
-    public AccountModel LoginAccount(string usernameOrEmail, string password, int connectionID, string token)
+    //public AccountModel LoginAccount(string usernameOrEmail, string password, int connectionID, string token)
+    //{
+    //    AccountModel myAccount = null;
+    //    IMongoQuery query = null;
+
+    //    //Find my acount
+    //    if(Utility.IsEmail(usernameOrEmail))
+    //    {
+    //        query = Query.And(
+    //            Query<AccountModel>.EQ(u => u.Email, usernameOrEmail),
+    //            Query<AccountModel>.EQ(u => u.ShaPassword, password));
+
+    //        myAccount = accounts.FindOne(query);
+    //    }else
+    //    {
+    //        string[] data = usernameOrEmail.Split('#');
+    //        if(data[1] != null)
+    //        {
+    //            query = Query.And(
+    //                Query<AccountModel>.EQ(u => u.Username, data[0]),
+    //                Query<AccountModel>.EQ(u => u.Discriminator, data[1]),
+    //                Query<AccountModel>.EQ(u => u.ShaPassword, data[2]));
+
+    //            myAccount = accounts.FindOne(query);
+    //        }
+    //    }
+    //    if (myAccount != null)
+    //    {
+    //        //Login
+    //        myAccount.ActiveConnection = connectionID;
+    //        myAccount.Token = token;
+    //        myAccount.Status = 1;
+    //        myAccount.LastLogin = System.DateTime.Now;
+
+    //        accounts.Update(query, Update<AccountModel>.Replace(myAccount));
+    //    }
+    //    else
+    //    {
+    //        Debug.Log("No account Found");
+    //    }
+
+    //    return myAccount;
+    //}
+
+    public AccountModel LoginAccount(string userID, int connectionID, string token)
     {
         AccountModel myAccount = null;
         IMongoQuery query = null;
 
         //Find my acount
-        if(Utility.IsEmail(usernameOrEmail))
-        {
-            query = Query.And(
-                Query<AccountModel>.EQ(u => u.Email, usernameOrEmail),
-                Query<AccountModel>.EQ(u => u.ShaPassword, password));
-
-            myAccount = accounts.FindOne(query);
-        }else
-        {
-            string[] data = usernameOrEmail.Split('#');
-            if(data[1] != null)
-            {
-                query = Query.And(
-                    Query<AccountModel>.EQ(u => u.Username, data[0]),
-                    Query<AccountModel>.EQ(u => u.Discriminator, data[1]),
-                    Query<AccountModel>.EQ(u => u.ShaPassword, data[2]));
-
-                myAccount = accounts.FindOne(query);
-            }
-        }
-        if (myAccount != null)
-        {
-            //Login
-            myAccount.ActiveConnection = connectionID;
-            myAccount.Token = token;
-            myAccount.Status = 1;
-            myAccount.LastLogin = System.DateTime.Now;
-
-            accounts.Update(query, Update<AccountModel>.Replace(myAccount));
-        }
-        else
-        {
-            Debug.Log("No account Found");
-        }
-
-        return myAccount;
-    }
-
-    public AccountModel LoginWithFacebook(string userID, int connectionID, string token)
-    {
-        AccountModel myAccount = null;
-        IMongoQuery query = null;
-
-        //Find my acount
-        myAccount = FindAccountByFacebookId(userID);
+        myAccount = FindAccountByUserId(userID);
 
         query = Query.And(
-                    Query<AccountModel>.EQ(u => u.FacebookUserID, userID));
+                    Query<AccountModel>.EQ(u => u.userId, userID));
 
         myAccount = accounts.FindOne(query);
 
@@ -227,51 +178,41 @@ public class MongoDataBase
     #endregion
 
     #region Fetch
-    public AccountModel FindAccountByFacebookId(string userId)
+    public AccountModel FindAccountByUserId(string userId)
     {
-        return accounts.FindOne(Query<AccountModel>.EQ(u => u.FacebookUserID, userId));
+        return accounts.FindOne(Query<AccountModel>.EQ(u => u.userId, userId));
     }
     public AccountModel FindAccounById(ObjectId id)
     {
         return accounts.FindOne(Query<AccountModel>.EQ(u => u._id, id));
     }
+    #region Fetch Extra
+    //public AccountModel FindAccountByEmail(string email)
+    //{
+    //    return accounts.FindOne(Query<AccountModel>.EQ(u => u.Email, email));
+    //}
 
-    public AccountModel FindAccountByEmail(string email)
-    {
-        return accounts.FindOne(Query<AccountModel>.EQ(u => u.Email, email));
-    }
+    //public AccountModel FindAccountByUsernameAndDiscriminator(string username, string discriminator)
+    //{
+    //    var query = Query.And(
+    //        Query<AccountModel>.EQ(u => u.Username, username),
+    //        Query<AccountModel>.EQ(u => u.Discriminator, discriminator));
+    //    return accounts.FindOne(query);
+    //}
+    #endregion
 
-    public AccountModel FindAccountByUsernameAndDiscriminator(string username, string discriminator)
-    {
-        var query = Query.And(
-            Query<AccountModel>.EQ(u => u.Username, username),
-            Query<AccountModel>.EQ(u => u.Discriminator, discriminator));
-        return accounts.FindOne(query);
-    }
-
-    public AccountModel FindAccountByToken(string token)
-    {
-        return accounts.FindOne(Query<AccountModel>.EQ(u => u.Token, token));
-    }
-
-    public FriendModel FindFriendByUsername(string token, string username)
+    public FriendModel FindFriendByUsername(string token, string userId)
     {
         try
         {
-            string[] data = username.Split('#');
-            if (data[1] != null)
-            {
-                var sender = new MongoDBRef("account", FindAccountByToken(token)._id);
-                var reciver = new MongoDBRef("account", FindAccountByUsernameAndDiscriminator(data[0], data[1])._id);
+            var sender = new MongoDBRef("account", FindAccountByToken(token)._id);
+            var reciver = new MongoDBRef("account", FindAccountByUserId(userId)._id);
 
-                var query = Query.And(
-                    Query<FriendModel>.EQ(f => f.Sender, sender),
-                    Query<FriendModel>.EQ(f => f.Reciver, reciver));
+            var query = Query.And(
+                Query<FriendModel>.EQ(f => f.Sender, sender),
+                Query<FriendModel>.EQ(f => f.Reciver, reciver));
 
-                return friends.FindOne(query);
-            }
-
-            return null;
+            return friends.FindOne(query);
         }
         catch (System.Exception)
         {
@@ -279,6 +220,13 @@ public class MongoDataBase
             throw;
         }
     }
+
+
+    public AccountModel FindAccountByToken(string token)
+    {
+        return accounts.FindOne(Query<AccountModel>.EQ(u => u.Token, token));
+    }
+
     
     public List<Account> FindAllFriendsFrom(string token)
     {
@@ -295,9 +243,9 @@ public class MongoDataBase
         return friendResponse;
     }
 
-    public List<Account> FindAllFriendsBy(string email)
+    public List<Account> FindAllFriendsBy(string userId)
     {
-        var self = new MongoDBRef("account", FindAccountByEmail(email)._id);
+        var self = new MongoDBRef("account", FindAccountByUserId(userId)._id);
 
         var query = Query<FriendModel>.EQ(f => f.Reciver, self);
 
@@ -318,11 +266,24 @@ public class MongoDataBase
     #endregion
 
     #region Update
-    internal void UpdateAccountOnDisconnect(string email)
+    internal void UpdateAccountOnDisconnect(string userId)
     {
-        var query = Query<AccountModel>.EQ(a => a.Email, email);
+        var query = Query<AccountModel>.EQ(a => a.userId, userId);
         var account = accounts.FindOne(query);
 
+        account.Token = null;
+        account.ActiveConnection = 0;
+        account.Status = 0;
+
+        accounts.Update(query, Update<AccountModel>.Replace(account));
+    }
+
+    public void UpdateUserFromGuestToFacebookUser(string currentUserId, string facebookUserId)
+    {
+        var query = Query<AccountModel>.EQ(a => a.userId, currentUserId);
+        var account = accounts.FindOne(query);
+
+        account.userId = facebookUserId;
         account.Token = null;
         account.ActiveConnection = 0;
         account.Status = 0;

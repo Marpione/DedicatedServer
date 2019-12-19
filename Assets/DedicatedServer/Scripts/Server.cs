@@ -123,23 +123,14 @@ public class Server : MonoBehaviour
     {
         string randomToken = Utility.GenerateRandom(256);
         AccountModel account;
-        if (string.IsNullOrEmpty(lr.FacebookUserId))
-        {
-            Debug.Log("Logging in normally");
-            account = mongoDataBase.LoginAccount(lr.UsernameOrEmail, lr.Password, connectionId, randomToken);
-        }
-        else
-        {
-            Debug.Log("Logging with facebook");
-            account = mongoDataBase.LoginWithFacebook(lr.FacebookUserId, connectionId, randomToken);
-        }
+        account = mongoDataBase.LoginAccount(lr.UsernameOrEmail, connectionId, randomToken);
+
         Net_OnLoginRequest olr = new Net_OnLoginRequest();
         
         if(account != null)
         {
             olr.Success = 1;
-            olr.Information = "Login success " + account.Username;
-            olr.Discriminator = account.Discriminator;
+            olr.Information = "Login success " + account.userId;
             olr.Token = randomToken;
             olr.ConnectionId = connectionId;
 
@@ -148,7 +139,7 @@ public class Server : MonoBehaviour
             Net_FriendUpdate fu = new Net_FriendUpdate();
             fu.Friend = account.GetAccount();
 
-            foreach (var f in mongoDataBase.FindAllFriendsBy(account.Email))
+            foreach (var f in mongoDataBase.FindAllFriendsBy(account.userId))
             {
                 if (f.Activeconnection == 0)
                     continue;
@@ -204,14 +195,14 @@ public class Server : MonoBehaviour
         if (account == null)
             return;
 
-        mongoDataBase.UpdateAccountOnDisconnect(account.Email);
+        mongoDataBase.UpdateAccountOnDisconnect(account.userId);
 
         // Prepare and send update message
         Net_FriendUpdate fu = new Net_FriendUpdate();
-        AccountModel updatedAccount = mongoDataBase.FindAccountByEmail(account.Email);
+        AccountModel updatedAccount = mongoDataBase.FindAccountByUserId(account.userId);
         fu.Friend = updatedAccount.GetAccount();
 
-        foreach (var f in mongoDataBase.FindAllFriendsBy(account.Email))
+        foreach (var f in mongoDataBase.FindAllFriendsBy(account.userId))
         {
             if (f.Activeconnection == 0)
                 continue;
@@ -244,26 +235,13 @@ public class Server : MonoBehaviour
     {
         Net_OnAddFriend oaf = new Net_OnAddFriend();
 
-        if (mongoDataBase.InsertFriend(netMessage.Token, netMessage.UsernameOrEmail))
+        if (mongoDataBase.InsertFriend(netMessage.Token, netMessage.userId))
         {
             oaf.Success = 1;
-            if (Utility.IsEmail(netMessage.UsernameOrEmail))
-            {
-                //This is email
-                oaf.FriendAccount = mongoDataBase.FindAccountByEmail(netMessage.UsernameOrEmail).GetAccount();
-            }
-            else
-            {
-                string[] data = netMessage.UsernameOrEmail.Split('#');
-                if (data[1] == null)
-                    return;
-
-                //This is username
-                oaf.FriendAccount = mongoDataBase.FindAccountByUsernameAndDiscriminator(data[0], data[1]).GetAccount();
-            }
+            oaf.FriendAccount = mongoDataBase.FindAccountByUserId(netMessage.userId).GetAccount();
         }
         else oaf.Success = 0;
-        Debug.Log(oaf.GetType());
+
         SendClient(recHostId, connectionId, oaf);
     }
 
