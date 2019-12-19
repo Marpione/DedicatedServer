@@ -79,19 +79,14 @@ public class MongoDataBase
         return false;
     }
 
-    public bool InsertAccount(string userId, string password, string email, string facebookId)
+    public bool InsertAccount(string userId)
     {
-        if(string.IsNullOrEmpty(facebookId))
+        //Check if the account is already exist
+        if (FindAccountByUserId(userId) != null)
         {
-            //Check if the account is already exist
-            if (FindAccountByUserId(email) != null)
-            {
-                UnityEngine.Debug.Log(email + " Account is already in use");
-                return false;
-            }
+            UnityEngine.Debug.Log(userId + " Account is already in use");
+            return false;
         }
-
-       
 
         AccountModel newAccount = new AccountModel();
         newAccount.userId = userId;
@@ -284,9 +279,6 @@ public class MongoDataBase
         var account = accounts.FindOne(query);
 
         account.userId = facebookUserId;
-        account.Token = null;
-        account.ActiveConnection = 0;
-        account.Status = 0;
 
         accounts.Update(query, Update<AccountModel>.Replace(account));
     }

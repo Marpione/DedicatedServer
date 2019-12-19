@@ -30,8 +30,8 @@ public class AccountModel
     public Account GetAccount()
     {
         return new Account() { userId = this.userId,
-            Activeconnection = this.ActiveConnection,
-            Status = this.Status,
-            AccountType = this.AccountType};
+            ActiveConnection = this.ActiveConnection,
+            Status = this.Status
+        };
     }
 }

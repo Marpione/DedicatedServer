@@ -105,15 +105,17 @@ public class Server : MonoBehaviour
     {
         Net_OnCreateAccount oca = new Net_OnCreateAccount();
 
-        if(mongoDataBase.InsertAccount(ca.Username, ca.Password, ca.Email, ca.FacebookUserId))
+        if(mongoDataBase.InsertAccount(ca.UserId))
         {
             oca.Success = 1;
             oca.Information = "Account was created";
+            oca.UserId = ca.UserId;
         }
         else
         {
             oca.Success = 0;
             oca.Information = "There was an error on create account!";
+            oca.UserId = ca.UserId;
         }
 
         SendClient(recHostId, connectionId, oca);
@@ -123,7 +125,7 @@ public class Server : MonoBehaviour
     {
         string randomToken = Utility.GenerateRandom(256);
         AccountModel account;
-        account = mongoDataBase.LoginAccount(lr.UsernameOrEmail, connectionId, randomToken);
+        account = mongoDataBase.LoginAccount(lr.UserId, connectionId, randomToken);
 
         Net_OnLoginRequest olr = new Net_OnLoginRequest();
         
@@ -141,10 +143,16 @@ public class Server : MonoBehaviour
 
             foreach (var f in mongoDataBase.FindAllFriendsBy(account.userId))
             {
-                if (f.Activeconnection == 0)
+                if (f.ActiveConnection == 0)
                     continue;
 
-                SendClient(recHostId, f.Activeconnection, fu);
+                SendClient(recHostId, f.ActiveConnection, fu);
+            }
+
+            //If this is a facebook login update the user id to facebook user id for this user
+            if (lr.FacebookUserId != null)
+            {
+                mongoDataBase.UpdateUserFromGuestToFacebookUser(lr.UserId, lr.FacebookUserId);
             }
         }
         else
@@ -204,10 +212,10 @@ public class Server : MonoBehaviour
 
         foreach (var f in mongoDataBase.FindAllFriendsBy(account.userId))
         {
-            if (f.Activeconnection == 0)
+            if (f.ActiveConnection == 0)
                 continue;
 
-            SendClient(recHostId, f.Activeconnection, fu);
+            SendClient(recHostId, f.ActiveConnection, fu);
         }
     }
 
@@ -235,10 +243,10 @@ public class Server : MonoBehaviour
     {
         Net_OnAddFriend oaf = new Net_OnAddFriend();
 
-        if (mongoDataBase.InsertFriend(netMessage.Token, netMessage.userId))
+        if (mongoDataBase.InsertFriend(netMessage.Token, netMessage.UserId))
         {
             oaf.Success = 1;
-            oaf.FriendAccount = mongoDataBase.FindAccountByUserId(netMessage.userId).GetAccount();
+            oaf.FriendAccount = mongoDataBase.FindAccountByUserId(netMessage.UserId).GetAccount();
         }
         else oaf.Success = 0;
 
@@ -255,7 +263,7 @@ public class Server : MonoBehaviour
 
     private void RemoveFriend(int connectionId, int channelId, int recHostId, Net_RemoveFriend netMessage)
     {
-        mongoDataBase.RemoveFriend(netMessage.Token, netMessage.Username);
+        mongoDataBase.RemoveFriend(netMessage.Token, netMessage.UserId);
     }
 
     #endregion

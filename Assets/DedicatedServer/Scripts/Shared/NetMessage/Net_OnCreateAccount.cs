@@ -10,6 +10,7 @@ public class Net_OnCreateAccount : NetMessage
         OP = NetOP.OnCreateAccount;
     }
 
+    public string UserId { set; get; }
     public byte Success { set; get; }
     public string Information { set; get; }
 }

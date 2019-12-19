@@ -8,5 +8,5 @@ public class Net_AddFriend : NetMessage
     }
 
     public string Token { set; get; }
-    public string UsernameOrEmail { set; get; }
+    public string UserId { set; get; }
 }

@@ -7,7 +7,7 @@ public class Net_RemoveFriend : NetMessage
         OP = NetOP.RemoveFriend;
     }
 
-    public string Token;
-    public string Username { set; get; }
+    public string Token { set; get; }
+    public string UserId { set; get; }
 
 }

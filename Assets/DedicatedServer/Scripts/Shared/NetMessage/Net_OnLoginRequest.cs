@@ -14,7 +14,6 @@ public class Net_OnLoginRequest : NetMessage
     public string Information { set; get; }
 
     public int ConnectionId { set; get; }
-    public string Username { set; get; }
-    public string Discriminator { set; get; }
+    public string UserId { set; get; }
     public string Token { set; get; }
 }

@@ -7,6 +7,6 @@ public class Net_RequestFriend : NetMessage
         OP = NetOP.RequestFriend;
     }
 
-    public string Token;
+    public string Token { set; get; }
 
 }
