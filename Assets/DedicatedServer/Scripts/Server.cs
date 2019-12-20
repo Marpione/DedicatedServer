@@ -152,6 +152,7 @@ public class Server : MonoBehaviour
             //If this is a facebook login update the user id to facebook user id for this user
             if (lr.FacebookUserId != null)
             {
+                olr.Information = "Login success user " + account.userId + "updated from guest to facebook with the id " + lr.FacebookUserId;
                 mongoDataBase.UpdateUserFromGuestToFacebookUser(lr.UserId, lr.FacebookUserId);
             }
         }

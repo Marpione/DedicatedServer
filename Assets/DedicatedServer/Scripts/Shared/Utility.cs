@@ -11,6 +11,17 @@ public class Utility
     public const string USERNAME_PATTERN = @"^[a-zA-Z0-9]{4,20}$";
     public const string RANDOM_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
+    public static bool IsGuest(string userId)
+    {
+        string[] id = userId.Split('#');
+        if (id[0] != null)
+        {
+            if (string.Equals(id[0], "Guest"))
+                return true;
+        }
+
+        return false;
+    }
 
     public static bool IsEmail(string email)
     {

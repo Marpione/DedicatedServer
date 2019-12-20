@@ -275,12 +275,19 @@ public class MongoDataBase
 
     public void UpdateUserFromGuestToFacebookUser(string currentUserId, string facebookUserId)
     {
-        var query = Query<AccountModel>.EQ(a => a.userId, currentUserId);
-        var account = accounts.FindOne(query);
+        try
+        {
+            var query = Query<AccountModel>.EQ(a => a.userId, currentUserId);
+            var account = accounts.FindOne(query);
+            account.userId = facebookUserId;
 
-        account.userId = facebookUserId;
-
-        accounts.Update(query, Update<AccountModel>.Replace(account));
+            accounts.Update(query, Update<AccountModel>.Replace(account));
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("Can't find user with id " + currentUserId);
+        }
+        
     }
     #endregion
 
