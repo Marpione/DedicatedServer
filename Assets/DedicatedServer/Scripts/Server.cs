@@ -7,8 +7,8 @@ using UnityEngine.Networking;
 public class Server : MonoBehaviour
 {
     private const int MAX_USER = 100;
-    private const int port = 13000;
-    private const int web_Port = 13001;
+    private const int port = 8080;
+    private const int web_Port = 8081;
     private const int BYTE_SIZE = 1024;
 
     private byte relibleChannel;
@@ -131,6 +131,7 @@ public class Server : MonoBehaviour
         
         if(account != null)
         {
+            olr.UserId = lr.UserId;
             olr.Success = 1;
             olr.Information = "Login success " + account.userId;
             olr.Token = randomToken;
@@ -248,9 +249,9 @@ public class Server : MonoBehaviour
         {
             oaf.Success = 1;
             oaf.FriendAccount = mongoDataBase.FindAccountByUserId(netMessage.UserId).GetAccount();
+            Debug.Log("Adding Friend" + oaf.FriendAccount.userId);
         }
         else oaf.Success = 0;
-
         SendClient(recHostId, connectionId, oaf);
     }
 
